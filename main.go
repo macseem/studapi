@@ -1,7 +1,8 @@
 package main
 
 import (
-	"api/studentcom"
+	"clearmove/studapi/places"
+	"clearmove/studapi/studentcom"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -10,6 +11,9 @@ import (
 func main() {
 	http.HandleFunc("/getlistacc", HandlerGetListAcc)
 	http.HandleFunc("/bookaccomodation", HandlerPostBook)
+	// TODO: Move config values to .env
+	placesConfig := &places.Config{GoogleAPIKey: "AIzaSyBxbE8g9mKeNXvgERMb_moW2weunJNu1X4"}
+	http.HandleFunc("/places", func(w http.ResponseWriter, r *http.Request) { places.AutocompleteHandleFunc(w, r, placesConfig) })
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatalln(err)
