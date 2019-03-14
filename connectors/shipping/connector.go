@@ -9,9 +9,10 @@ import (
 	"strings"
 )
 
-var ShippingAPIUrl = "https://hei.innovate360.co.uk/api"
+var shippingAPIUrl = "https://hei.innovate360.co.uk/api"
 
-type httpPoster interface {
+// HTTPPoster it's an interface which represents Post method of http.Client
+type HTTPPoster interface {
 	Post(url, contentType string, body io.Reader) (*http.Response, error)
 }
 
@@ -19,7 +20,7 @@ type httpPoster interface {
 // which connects you to hey.innovative360.co.uk
 type Client struct {
 	APIKey     string
-	HTTPPoster httpPoster
+	HTTPPoster
 }
 
 // GetPrices is an end point for getting prices with inventory
@@ -32,7 +33,7 @@ func (c *Client) GetPrices(request GetPricesReq) (*GetPricesRes, error) {
 	}
 	action := "/quote"
 	bodyReader := strings.NewReader(string(body))
-	rawResp, err := c.HTTPPoster.Post(ShippingAPIUrl+action, "application/json", bodyReader)
+	rawResp, err := c.HTTPPoster.Post(shippingAPIUrl+action, "application/json", bodyReader)
 	if err != nil {
 		return nil, errors.New("Error occured during request to hey.innovate.360. Details: " + err.Error())
 	}

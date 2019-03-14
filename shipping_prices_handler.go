@@ -8,42 +8,33 @@ import (
 	"net/http"
 )
 
-// NewShippingPricesHandler it's a factory method for the AppHandler of ShippingPrices endpoint
-func NewShippingPricesHandler(ShippingAPIKey, GoogleAPIKey string) AppHandler {
-	httpClient := &http.Client{}
-	client := shipping.Client{
-		APIKey:     ShippingAPIKey,
-		HTTPPoster: httpClient,
+// ShippingPricesHandler it's a factory method for the AppHandler of ShippingPrices endpoint
+var ShippingPricesHandler AppHandler = func(r *http.Request) (interface{}, *jsonErrorRes) {
+	sr := &ShippingPricesReq{}
+	err := json.NewDecoder(r.Body).Decode(sr)
+	if err != nil {
+		return nil, newJSONErrorResponse(http.StatusBadRequest, "Invalid Request Body", err.Error())
 	}
-	placesClient := &places.Client{
-		APIKey:     GoogleAPIKey,
-		HTTPGetter: httpClient,
+	getPricesReq, err := mapShippingPricesReqToGetPricesReq(placesClient, sr)
+	if err != nil {
+		return nil, newJSONErrorResponse(
+			http.StatusInternalServerError,
+			"Cannot map our request to the hey.innovative360 request",
+			err.Error(),
+		)
 	}
-	return func(r *http.Request) (interface{}, *jsonErrorRes) {
-		sr := &ShippingPricesReq{}
-		err := json.NewDecoder(r.Body).Decode(sr)
-		if err != nil {
-			return nil, newJSONErrorResponse(http.StatusBadRequest, "Invalid Request Body", err.Error())
-		}
-		getPricesReq, err := mapShippingPricesReqToGetPricesReq(placesClient, sr)
-		if err != nil {
-			return nil, newJSONErrorResponse(
-				http.StatusInternalServerError,
-				"Cannot map our request to the hey.innovative360 request",
-				err.Error(),
-			)
-		}
-		resp, err := client.GetPrices(*getPricesReq)
-		if err != nil {
-			return nil, newJSONErrorResponse(
-				http.StatusInternalServerError,
-				"Error occured during getting prices",
-				err.Error(),
-			)
-		}
-		return resp, nil
+	resp, err := shippingClient.GetPrices(*getPricesReq)
+	if err != nil {
+		return nil, newJSONErrorResponse(
+			http.StatusInternalServerError,
+			"Error occured during getting prices",
+			err.Error(),
+		)
 	}
+	return resp, nil
 }
+
+
 
 func mapShippingPricesReqToGetPricesReq(pc *places.Client, sr *ShippingPricesReq) (*shipping.GetPricesReq, error) {
 	origin, err := getPricesAddrByPlaceID(pc, sr.SessionToken, sr.From)
@@ -81,7 +72,7 @@ func mapShippingPricesReqToGetPricesReq(pc *places.Client, sr *ShippingPricesReq
 	return request, nil
 }
 
-func getPricesAddrByPlaceID(pc *places.Client, sessionToken string, id googlePlaceID) (*shipping.GetPricesAddr, error) {
+func getPricesAddrByPlaceID(pc *places.Client, sessionToken string, id googlePlaceID) (*shipping.Location, error) {
 	details, err := pc.GetPlaceDetailsByPlaceID(sessionToken, string(id))
 	if err != nil {
 		return nil, err
@@ -99,7 +90,7 @@ func getPricesAddrByPlaceID(pc *places.Client, sessionToken string, id googlePla
 		}
 	}
 
-	return &shipping.GetPricesAddr{
+	return &shipping.Location{
 		Address: details.Address,
 		Lat:     details.Geometry.Location.Lat,
 		Lng:     details.Geometry.Location.Lng,

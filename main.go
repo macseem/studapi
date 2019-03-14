@@ -1,30 +1,59 @@
 package main
 
 import (
+	"clearmove/studapi/connectors/places"
+	"clearmove/studapi/connectors/shipping"
 	"clearmove/studapi/studentcom"
+	"database/sql"
 	"encoding/json"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
+	"os"
 )
 
+var config *Config
+var placesClient *places.Client
+var shippingClient *shipping.Client
+var httpClient *http.Client
+var db *sql.DB
+
+func init() {
+	f, err := os.Open("./config.json")
+	if err != nil {
+		panic(err)
+	}
+	config = &Config{}
+	err = json.NewDecoder(f).Decode(config)
+	if err != nil {
+		panic(err)
+	}
+	f.Close()
+	httpClient = &http.Client{}
+	placesClient = &places.Client{
+		APIKey:     config.GoogleAPIKey,
+		HTTPGetter: httpClient,
+	}
+	shippingClient = &shipping.Client{
+		APIKey:     config.ShippingForceAPIKey,
+		HTTPPoster: httpClient,
+	}
+	db, err = sql.Open("postgres", config.DBConnStr)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
+	var err error
+
 	http.HandleFunc("/getlistacc", HandlerGetListAcc)
 	http.HandleFunc("/bookaccomodation", HandlerPostBook)
-	// TODO: Move config values to .env
-
-	http.Handle(
-		"/places",
-		NewPlacesHandler("AIzaSyBxbE8g9mKeNXvgERMb_moW2weunJNu1X4"),
-	)
-
-	http.Handle(
-		"/shipping/prices",
-		NewShippingPricesHandler(
-			"a0d520de-957a-4e54-af58-b936647f0387",
-			"AIzaSyBxbE8g9mKeNXvgERMb_moW2weunJNu1X4",
-		),
-	)
-	err := http.ListenAndServe(":8080", nil)
+	http.Handle("/places", PlacesHandler)
+	http.Handle("/shipping/prices", ShippingPricesHandler)
+	http.Handle("/orders", GetOrdersHandler)
+	http.Handle("/order/create", PostOrderHandler)
+	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatalln(err)
 	}

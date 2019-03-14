@@ -17,7 +17,7 @@ type AppError struct {
 }
 
 // AppHandler is a http.Handler interface implementation with error logging
-type AppHandler func(*http.Request) (interface{}, *jsonErrorRes)
+type AppHandler func(r *http.Request) (interface{}, *jsonErrorRes)
 func (ah AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("ContentType", "application/json")
 	bodyTeeBuf := bytes.Buffer{}
