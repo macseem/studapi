@@ -9,32 +9,31 @@ import (
 )
 
 // ShippingPricesHandler it's a factory method for the AppHandler of ShippingPrices endpoint
-var ShippingPricesHandler AppHandler = func(r *http.Request) (interface{}, *jsonErrorRes) {
+var ShippingPricesHandler AppHandler = func(r *http.Request) *AppRes {
 	sr := &ShippingPricesReq{}
 	err := json.NewDecoder(r.Body).Decode(sr)
 	if err != nil {
-		return nil, newJSONErrorResponse(http.StatusBadRequest, "Invalid Request Body", err.Error())
+		return &AppRes{Code: http.StatusBadRequest, Error: newJSONError("Invalid Request Body", err)}
 	}
 	getPricesReq, err := mapShippingPricesReqToGetPricesReq(placesClient, sr)
 	if err != nil {
-		return nil, newJSONErrorResponse(
-			http.StatusInternalServerError,
-			"Cannot map our request to the hey.innovative360 request",
-			err.Error(),
-		)
+		return &AppRes{
+			Code:  http.StatusInternalServerError,
+			Error: newJSONError("Cannot map our request to the hey.innovative360 request", err),
+		}
 	}
 	resp, err := shippingClient.GetPrices(*getPricesReq)
 	if err != nil {
-		return nil, newJSONErrorResponse(
-			http.StatusInternalServerError,
-			"Error occured during getting prices",
-			err.Error(),
-		)
+		return &AppRes{
+			Code:  http.StatusInternalServerError,
+			Error: newJSONError("Error occured during getting prices", err),
+		}
 	}
-	return resp, nil
+	return &AppRes{
+		Code: http.StatusOK,
+		Data: resp,
+	}
 }
-
-
 
 func mapShippingPricesReqToGetPricesReq(pc *places.Client, sr *ShippingPricesReq) (*shipping.GetPricesReq, error) {
 	origin, err := getPricesAddrByPlaceID(pc, sr.SessionToken, sr.From)

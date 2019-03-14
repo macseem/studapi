@@ -3,39 +3,36 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"io"
 )
 
-// AppError is a struct for error handler
-type AppError struct {
-	Error   error
-	Message string
-	Code    int
+// AppRes Common Application Response struct
+type AppRes struct {
+	Code  int         `json:"status_code"`
+	Data  interface{} `json:"data,omitempty"`
+	Error *jsonError  `json:"error,omitempty"`
 }
 
 // AppHandler is a http.Handler interface implementation with error logging
-type AppHandler func(r *http.Request) (interface{}, *jsonErrorRes)
+type AppHandler func(r *http.Request) *AppRes
+
 func (ah AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("ContentType", "application/json")
 	bodyTeeBuf := bytes.Buffer{}
 	rBody := r.Body
 	defer rBody.Close()
-	teeBody:=ioutil.NopCloser(io.TeeReader(rBody, &bodyTeeBuf))
-	r.Body=teeBody
+	teeBody := ioutil.NopCloser(io.TeeReader(rBody, &bodyTeeBuf))
+	r.Body = teeBody
 	log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-	resp, appErr := ah(r)
+	resp := ah(r)
+	if resp.Error != nil {
+		log.Fatal(resp.Error)
+	}
 	log.Printf("[Body]:\n%s\n[EndBody]", bodyTeeBuf.String())
-	if appErr != nil {
-		JSONErrorHandleFunc(w, appErr)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
 
-	err := json.NewEncoder(w).Encode(resp)
-	if err != nil {
-		JSONErrorHandleFunc(w, newJSONErrorResponse(500, "Cannot Marshal Response", err.Error()))
-	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resp)
 }
