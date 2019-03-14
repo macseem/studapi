@@ -19,7 +19,7 @@ type HTTPPoster interface {
 // Client it's a struct which stores APIKey, http client and methods
 // which connects you to hey.innovative360.co.uk
 type Client struct {
-	APIKey     string
+	APIKey string
 	HTTPPoster
 }
 
@@ -30,6 +30,11 @@ func (c *Client) GetPrices(request GetPricesReq) (*GetPricesRes, error) {
 	if err != nil {
 		log.Fatal("Error: Something weird with our struct, it cannot be marshalled to JSON")
 		return nil, err
+	}
+	if true {
+		mockResp := &GetPricesRes{}
+		GetPricesMock(mockResp)
+		return mockResp, nil
 	}
 	action := "/quote"
 	bodyReader := strings.NewReader(string(body))
