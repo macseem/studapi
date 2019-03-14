@@ -30,6 +30,8 @@ func (c *Client) Autocomplete(sessionToken, autocompleteType, input string) (*Au
 	q.Set("types", autocompleteType)
 	q.Set("key", c.APIKey)
 	q.Set("sessiontoken", sessionToken)
+
+	if true {return getCitiesMock(),nil}
 	//	log.Print(googleAPIURL + action + q.Encode())
 	//return nil, nil
 	resp, err := c.HTTPGetter.Get(googleAPIURL + action + q.Encode())
@@ -54,6 +56,8 @@ func (c *Client) GetPlaceDetailsByPlaceID(sessionToken, id string) (*PlaceDetail
 	q.Set("placeid", id)
 	q.Set("fields", "formatted_address,geometry,address_components")
 	log.Print(googleAPIURL + action + q.Encode())
+
+	if true {return getPlaceDetailsMock(),nil}
 	//log.Print(googleAPIURL + action + q.Encode())
 	//return nil, nil
 	rawResp, err := c.HTTPGetter.Get(googleAPIURL + action + q.Encode())

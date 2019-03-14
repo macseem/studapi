@@ -194,3 +194,68 @@ func getCitiesMock() *AutocompleteResponse {
   }`), citiesMock)
 	return citiesMock
 }
+
+func getPlaceDetailsMock() *PlaceDetails {
+	details := &PlaceDetails{}
+	json.Unmarshal([]byte(`{
+   "html_attributions" : [],
+   "result" : {
+      "address_components" : [
+         {
+            "long_name" : "1",
+            "short_name" : "1",
+            "types" : [ "street_number" ]
+         },
+         {
+            "long_name" : "Natana Rybaka Lane",
+            "short_name" : "Natana Rybaka Ln",
+            "types" : [ "route" ]
+         },
+         {
+            "long_name" : "Shepetivka",
+            "short_name" : "Shepetivka",
+            "types" : [ "locality", "political" ]
+         },
+         {
+            "long_name" : "Shepetivs'ka city council",
+            "short_name" : "Shepetivs'ka city council",
+            "types" : [ "administrative_area_level_3", "political" ]
+         },
+         {
+            "long_name" : "Khmel'nyts'ka oblast",
+            "short_name" : "Khmel'nyts'ka oblast",
+            "types" : [ "administrative_area_level_1", "political" ]
+         },
+         {
+            "long_name" : "Ukraine",
+            "short_name" : "UA",
+            "types" : [ "country", "political" ]
+         },
+         {
+            "long_name" : "30400",
+            "short_name" : "30400",
+            "types" : [ "postal_code" ]
+         }
+      ],
+      "formatted_address" : "Natana Rybaka Ln, 1, Shepetivka, Khmel'nyts'ka oblast, Ukraine, 30400",
+      "geometry" : {
+         "location" : {
+            "lat" : 50.168899,
+            "lng" : 27.0421056
+         },
+         "viewport" : {
+            "northeast" : {
+               "lat" : 50.1703102802915,
+               "lng" : 27.0433398302915
+            },
+            "southwest" : {
+               "lat" : 50.1676123197085,
+               "lng" : 27.0406418697085
+            }
+         }
+      }
+   },
+   "status" : "OK"
+}`), details)
+	return details
+}

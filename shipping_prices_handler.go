@@ -5,7 +5,6 @@ import (
 	"clearmove/studapi/connectors/shipping"
 	"encoding/json"
 	"errors"
-
 	"net/http"
 )
 
@@ -20,31 +19,27 @@ func NewShippingPricesHandler(ShippingAPIKey, GoogleAPIKey string) AppHandler {
 		APIKey:     GoogleAPIKey,
 		HTTPGetter: httpClient,
 	}
-	return func(w http.ResponseWriter, r *http.Request) (interface{}, *AppError) {
+	return func(r *http.Request) (interface{}, *jsonErrorRes) {
 		sr := &ShippingPricesReq{}
 		err := json.NewDecoder(r.Body).Decode(sr)
 		if err != nil {
-			return nil, &AppError{
-				Error:   err,
-				Message: "Invalid Request Body",
-				Code:    500,
-			}
+			return nil, newJSONErrorResponse(http.StatusBadRequest, "Invalid Request Body", err.Error())
 		}
 		getPricesReq, err := mapShippingPricesReqToGetPricesReq(placesClient, sr)
 		if err != nil {
-			return nil, &AppError{
-				Message: "Cannot map our request to the hey.innovative360 request",
-				Error:   err,
-				Code:    500,
-			}
+			return nil, newJSONErrorResponse(
+				http.StatusInternalServerError,
+				"Cannot map our request to the hey.innovative360 request",
+				err.Error(),
+			)
 		}
 		resp, err := client.GetPrices(*getPricesReq)
 		if err != nil {
-			return nil, &AppError{
-				Error:   err,
-				Message: "Error occured during getting prices",
-				Code:    500,
-			}
+			return nil, newJSONErrorResponse(
+				http.StatusInternalServerError,
+				"Error occured during getting prices",
+				err.Error(),
+			)
 		}
 		return resp, nil
 	}

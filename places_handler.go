@@ -2,13 +2,12 @@ package main
 
 import (
 	"clearmove/studapi/connectors/places"
-	"errors"
 	"net/http"
 )
 
 // NewPlacesHandler is a method to create a handler for places endpoint
 func NewPlacesHandler(GoogleAPIKey string) AppHandler {
-	return func(w http.ResponseWriter, r *http.Request) (interface{}, *AppError) {
+	return func(r *http.Request) (interface{}, *jsonErrorRes) {
 		placesClient := &places.Client{
 			APIKey:     GoogleAPIKey,
 			HTTPGetter: &http.Client{},
@@ -18,18 +17,10 @@ func NewPlacesHandler(GoogleAPIKey string) AppHandler {
 			q.Get("sessiontoken"), q.Get("type"), q.Get("input"),
 		)
 		if err != nil {
-			return nil, &AppError{
-				Message: "Get Error from Google Autocomplete Connector",
-				Error:   err,
-				Code:    500,
-			}
+			return nil, newJSONErrorResponse(http.StatusInternalServerError, "Get Error from Google Autocomplete Connector", err.Error())
 		}
 		if len(resp.ErrorMessage) > 0 {
-			return nil, &AppError{
-				Message: "Get error message from google places API",
-				Error:   errors.New(resp.ErrorMessage),
-				Code:    500,
-			}
+			return nil, newJSONErrorResponse(http.StatusInternalServerError, "Get error message from google places API", err.Error())
 		}
 		return resp, nil
 	}
