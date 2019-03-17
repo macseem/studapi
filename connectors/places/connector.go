@@ -31,7 +31,7 @@ func (c *Client) Autocomplete(sessionToken, autocompleteType, input string) (*Au
 	q.Set("key", c.APIKey)
 	q.Set("sessiontoken", sessionToken)
 
-	if true {return getCitiesMock(),nil}
+	// if true {return getCitiesMock(),nil}
 	//	log.Print(googleAPIURL + action + q.Encode())
 	//return nil, nil
 	resp, err := c.HTTPGetter.Get(googleAPIURL + action + q.Encode())

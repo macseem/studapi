@@ -1,8 +1,8 @@
 package main
 
 import (
-	"clearmove/studapi/connectors/places"
-	"clearmove/studapi/connectors/shipping"
+	"github.com/macseem/studapi/connectors/places"
+	"github.com/macseem/studapi/connectors/shipping"
 	"encoding/json"
 	"errors"
 	"net/http"

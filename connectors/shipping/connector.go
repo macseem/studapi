@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 )
 
 var shippingAPIUrl = "https://hei.innovate360.co.uk/api"
@@ -25,20 +24,28 @@ type Client struct {
 
 // GetPrices is an end point for getting prices with inventory
 func (c *Client) GetPrices(request GetPricesReq) (*GetPricesRes, error) {
+	// if true {
+	// 	mockResp := &GetPricesRes{}
+	// 	GetPricesMock(mockResp)
+	// 	return mockResp, nil
+	// }
 	request.Key = c.APIKey
-	body, err := json.Marshal(request)
-	if err != nil {
+	bodyReader, w := io.Pipe()
+	defer bodyReader.Close()
+
+	ec := make(chan error)
+	go func(ec chan error) {
+		defer w.Close()
+		ec <- json.NewEncoder(w).Encode(request)
+	}(ec)
+
+	action := "/quote"
+	rawResp, err := c.HTTPPoster.Post(shippingAPIUrl+action, "application/json", bodyReader)
+	encodeErr := <-ec
+	if encodeErr != nil {
 		log.Fatal("Error: Something weird with our struct, it cannot be marshalled to JSON")
 		return nil, err
 	}
-	if true {
-		mockResp := &GetPricesRes{}
-		GetPricesMock(mockResp)
-		return mockResp, nil
-	}
-	action := "/quote"
-	bodyReader := strings.NewReader(string(body))
-	rawResp, err := c.HTTPPoster.Post(shippingAPIUrl+action, "application/json", bodyReader)
 	if err != nil {
 		return nil, errors.New("Error occured during request to hey.innovate.360. Details: " + err.Error())
 	}
